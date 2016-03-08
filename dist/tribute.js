@@ -643,15 +643,55 @@ if (!Array.prototype.find) {
           while (node = el.firstChild) {
             lastNode = frag.appendChild(node);
           }
-          range.insertNode(frag);
+          // range.insertNode(frag)
+          var savedSel = this.saveSelection();
+          var div = document.createElement('div');
+          div.appendChild(frag.cloneNode(true));
+
+          // your document fragment to a string (w/ html)! (yay!)
+          var html = div.innerHTML;
+          document.execCommand("InsertNode", false, div.innerHTML);
+          this.restoreSelection(savedSel);
 
           // Preserve the selection
-          if (lastNode) {
-            range = range.cloneRange();
-            range.setStartAfter(lastNode);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
+          // if (lastNode) {
+          //   range = range.cloneRange()
+          //   range.setStartAfter(lastNode)
+          //   range.collapse(true)
+          //   sel.removeAllRanges()
+          //   sel.addRange(range)
+          // }
+        }
+      }, {
+        key: 'saveSelection',
+        value: function saveSelection() {
+          if (window.getSelection) {
+            var sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+              var ranges = [];
+              for (var i = 0, len = sel.rangeCount; i < len; ++i) {
+                ranges.push(sel.getRangeAt(i));
+              }
+              return ranges;
+            }
+          } else if (document.selection && document.selection.createRange) {
+            return document.selection.createRange();
+          }
+          return null;
+        }
+      }, {
+        key: 'restoreSelection',
+        value: function restoreSelection(savedSel) {
+          if (savedSel) {
+            if (window.getSelection) {
+              var sel = window.getSelection();
+              sel.removeAllRanges();
+              for (var i = 0, len = savedSel.length; i < len; ++i) {
+                sel.addRange(savedSel[i]);
+              }
+            } else if (document.selection && savedSel.select) {
+              savedSel.select();
+            }
           }
         }
       }, {
