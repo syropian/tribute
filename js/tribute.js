@@ -50,6 +50,9 @@ if (!Array.prototype.find) {
       this.isActive = false
       this.menuContainer = menuContainer
 
+      this.deactivatedEvent = new CustomEvent('tribute-deactivated', { detail: this })
+      this.activatedEvent = new CustomEvent('tribute-activated', { detail: this })
+
       if (values) {
         this.collection = [{
           // symbol that starts the lookup
@@ -215,12 +218,14 @@ if (!Array.prototype.find) {
 
       this.range.positionMenuAtCaret()
 
+      this.current.element.dispatchEvent(this.activatedEvent)
+
     }
 
     hideMenu() {
       if (this.menu) {
         this.menu.style.cssText = 'display: none;'
-        this.isActive = false
+        this.deactivate()
         this.menuSelected = 0
         this.current = {}
       }
@@ -234,6 +239,16 @@ if (!Array.prototype.find) {
 
     replaceText(content) {
       this.range.replaceTriggerText(content, true, true)
+    }
+
+    deactivate() {
+      if (this.isActive) {
+        this.isActive = false
+
+        if (this.current && this.current.element) {
+          this.current.element.dispatchEvent(this.deactivatedEvent)
+        }
+      }
     }
   }
 
@@ -299,7 +314,7 @@ if (!Array.prototype.find) {
 
     keydown(instance, event) {
       if (instance.shouldDeactivate(event)) {
-        instance.tribute.isActive = false
+        instance.tribute.deactivate()
       }
 
       let element = this
